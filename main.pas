@@ -55,6 +55,69 @@ implementation
 
 {$R *.dfm}
 
+procedure TFormMetrick.FormCreate(Sender: TObject);
+begin
+  FillingStringGrid();
+end;
+
+procedure TFormMetrick.ButtonOpenFileClick(Sender: TObject);
+begin
+  if OpenDialog.Execute then
+  begin
+    MemoInputText.Clear;
+    MemoInputText.Lines.LoadFromFile(OpenDialog.FileName);
+  end
+  else
+    MessageBox(0, 'Открытие файла прервано!', 'Открытие файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
+end;
+
+procedure TFormMetrick.MemoInputTextChange(Sender: TObject);
+begin
+  ClearStringGrid();
+end;
+
+procedure TFormMetrick.ButtonSaveInputTextClick(Sender: TObject);
+begin
+  if SaveDialog.Execute then
+  begin
+    MemoInputText.Lines.SaveToFile(SaveDialog.FileName);
+    Application.MessageBox(SaveDialog.Files.GetText, 'Сохранение файла', MB_OK + MB_TOPMOST + MB_ICONASTERISK);
+  end
+  else
+    MessageBox(0, 'Сохранение файла прервано!', 'Сохранение файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
+end;
+
+procedure TFormMetrick.ButtonClearInputTextClick(Sender: TObject);
+begin
+  MemoInputText.Clear;
+end;
+
+procedure TFormMetrick.ClearStringGrid();
+var
+  i: integer;
+begin
+  for i := 1 to StringGridMetrick.RowCount - 1 do
+    StringGridMetrick.Cells[2, i] := '';
+  for i := 1 to StringGridOperators.RowCount - 1 do
+  begin
+    StringGridOperators.Cells[0, i] := '';
+    StringGridOperators.Cells[1, i] := '';
+  end;
+  for i := 1 to StringGridOperands.RowCount - 1 do
+  begin
+    StringGridOperands.Cells[0, i] := '';
+    StringGridOperands.Cells[1, i] := '';
+  end;
+  StringGridOperators.RowCount := 2;
+  StringGridOperands.RowCount := 2;
+end;
+
+procedure TFormMetrick.ButtonClearAllClick(Sender: TObject);
+begin
+  MemoInputText.Clear;
+  ClearStringGrid();
+end;
+
 procedure TFormMetrick.FillingStringGrid();
 const
   PRECENTAGE_FIRST_COLUMN: real = 0.52;
@@ -106,48 +169,6 @@ begin
   end;
 end;
 
-procedure TFormMetrick.ButtonOpenFileClick(Sender: TObject);
-begin
-  if OpenDialog.Execute then
-  begin
-    MemoInputText.Clear;
-    MemoInputText.Lines.LoadFromFile(OpenDialog.FileName);
-  end
-  else
-    MessageBox(0, 'Открытие файла прервано!', 'Открытие файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
-end;
-
-procedure TFormMetrick.ButtonClearInputTextClick(Sender: TObject);
-begin
-  MemoInputText.Clear;
-end;
-
-procedure TFormMetrick.ClearStringGrid();
-var
-  i: integer;
-begin
-  for i := 1 to StringGridMetrick.RowCount - 1 do
-    StringGridMetrick.Cells[2, i] := '';
-  for i := 1 to StringGridOperators.RowCount - 1 do
-  begin
-    StringGridOperators.Cells[0, i] := '';
-    StringGridOperators.Cells[1, i] := '';
-  end;
-  for i := 1 to StringGridOperands.RowCount - 1 do
-  begin
-    StringGridOperands.Cells[0, i] := '';
-    StringGridOperands.Cells[1, i] := '';
-  end;
-  StringGridOperators.RowCount := 2;
-  StringGridOperands.RowCount := 2;
-end;
-
-procedure TFormMetrick.ButtonClearAllClick(Sender: TObject);
-begin
-  MemoInputText.Clear;
-  ClearStringGrid();
-end;
-
 procedure TFormMetrick.DeleteExpressions(var inputText: string; searchExpression: string);
 var
   RegExpr: TRegExpr;
@@ -163,15 +184,56 @@ end;
 procedure TFormMetrick.FormattingText(var inputText: string);
 begin
   DeleteExpressions(inputText, '(\/\*(.*?)\*\/)|(\/\/(.*?)\n)');  // удаление комментариев
-  DeleteExpressions(inputText, '(#include\s*?\<[\w\/]{0,}\.?[\w]?>)'); // удаление директивы
+  DeleteExpressions(inputText, '(#include\s*?\<[\w\/]{0,}\.?[\w]?>)'); // удаление директивы #include
 end;
 
 procedure TFormMetrick.CorrectExpression(var expression: String);
 begin
-  if (expression[Length(expression)] = '(') then
+  if (expression[Length(expression)] = '(') then  // при поиске функции возвращается конструкция типа func(
     Delete(expression, length(expression), 1);
-  if (expression = 'do') then
+  if (expression = 'do') then            
     expression := expression + ' while';
+end;
+
+procedure TFormMetrick.PartitionOnFunctions(var inputText: String; var arrayFunction: TArrayOfFuction);
+var
+  RegExp: TPerlRegEx;
+  sizeArray, positionStart, i, amountSymbol: Integer;
+const
+  searchExpression: String = '(\b(signed |unsigned )?(short |long )?(char|int|float|double|bool|void)\s*[\w]*\s*?\([^\{\;]*?{)';
+begin
+  RegExp := TPerlRegEx.Create;
+  RegExp.Subject := inputText;
+  RegExp.RegEx := searchExpression;
+  sizeArray := 0;
+  if (RegExp.Match) then
+    repeat
+      RegExp.Free;
+      RegExp := TPerlRegEx.Create;
+      RegExp.Subject := inputText;
+      RegExp.RegEx := searchExpression;
+      if (RegExp.Match) then
+      begin
+        inc(sizeArray);
+        SetLength(arrayFunction, sizeArray);
+        positionStart := RegExp.GroupOffsets[0];
+        i := RegExp.MatchedLength - 1;
+        amountSymbol := 1;
+        while (amountSymbol <> 0) do
+        begin
+          inc(i);
+          if (inputText[positionStart + i] = '{') then
+            inc(amountSymbol);
+          if (inputText[positionStart + i] = '}') then
+            dec(amountSymbol);
+        end;
+        arrayFunction[sizeArray - 1] := Copy(inputText, positionStart, i + 1);
+        Delete(inputText, positionStart, i + 1);
+      end;
+    until not RegExp.MatchAgain;
+  SetLength(arrayFunction, sizeArray + 1);
+  arrayFunction[sizeArray] := inputText;
+  RegExp.Free;
 end;
 
 procedure TFormMetrick.AddInStringGrid(amountRow: integer; expression: String; StringGrid: TStringGrid);
@@ -301,47 +363,6 @@ begin
   end;
 end;
 
-procedure TFormMetrick.PartitionOnFunctions(var inputText: String; var arrayFunction: TArrayOfFuction);
-var
-  RegExp: TPerlRegEx;
-  sizeArray, positionStart, i, amountSymbol: Integer;
-const
-  searchExpression: String = '(\b(signed |unsigned )?(short |long )?(char|int|float|double|bool|void)\s*[\w]*\s*?\([^\{\;]*?{)';
-begin
-  RegExp := TPerlRegEx.Create;
-  RegExp.Subject := inputText;
-  RegExp.RegEx := searchExpression;
-  sizeArray := 0;
-  if (RegExp.Match) then
-    repeat
-      RegExp.Free;
-      RegExp := TPerlRegEx.Create;
-      RegExp.Subject := inputText;
-      RegExp.RegEx := searchExpression;
-      if (RegExp.Match) then
-      begin
-        inc(sizeArray);
-        SetLength(arrayFunction, sizeArray);
-        positionStart := RegExp.GroupOffsets[0];
-        i := RegExp.MatchedLength - 1;
-        amountSymbol := 1;
-        while (amountSymbol <> 0) do
-        begin
-          inc(i);
-          if (inputText[positionStart + i] = '{') then
-            inc(amountSymbol);
-          if (inputText[positionStart + i] = '}') then
-            dec(amountSymbol);
-        end;
-        arrayFunction[sizeArray - 1] := Copy(inputText, positionStart, i + 1);
-        Delete(inputText, positionStart, i + 1);
-      end;
-    until not RegExp.MatchAgain;
-  SetLength(arrayFunction, sizeArray + 1);
-  arrayFunction[sizeArray] := inputText;
-  RegExp.Free;
-end;
-
 procedure TFormMetrick.ButtonExecutClick(Sender: TObject);
 var
   inputText: string;
@@ -356,27 +377,6 @@ begin
     Finding(arrayFunction[i]);
   CalculationValues;
   //MemoInputText.Text := arrayFunction[length(arrayFunction) - 1];
-end;
-
-procedure TFormMetrick.FormCreate(Sender: TObject);
-begin
-  FillingStringGrid();
-end;
-
-procedure TFormMetrick.MemoInputTextChange(Sender: TObject);
-begin
-  ClearStringGrid();
-end;
-
-procedure TFormMetrick.ButtonSaveInputTextClick(Sender: TObject);
-begin
-  if SaveDialog.Execute then
-  begin
-    MemoInputText.Lines.SaveToFile(SaveDialog.FileName);
-    Application.MessageBox(SaveDialog.Files.GetText, 'Сохранение файла', MB_OK + MB_TOPMOST + MB_ICONASTERISK);
-  end
-  else
-    MessageBox(0, 'Сохранение файла прервано!', 'Сохранение файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
 end;
 
 end.
