@@ -1,0 +1,189 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <iostream>
+
+// EX 1
+
+void RandNumber(int inpMatrix[6][6], int outMatrix[6][6])
+{
+	srand(time(NULL));
+	for (int i = 0; i < 6; i++)
+	{
+		for (int j = 0; j < 6; j++)
+		{
+			inpMatrix[i][j] = rand()%10 + 2;  
+			outMatrix[i][j] = inpMatrix[i][j];
+		}
+	}
+}
+
+void PrintArray(int Matrix[6][6]) 
+{
+	for (int i = 0; i < 6; i++) 
+	{
+		for (int j = 0; j < 6; j++) 
+		{
+			printf("%d\t", Matrix[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
+void Swap(int Matrix[6][6], int OldValue, int NewValue)
+{
+	for (int i = 0; i < 6; i++)
+	{
+		for (int j = 0; j < 6; j++)
+		{
+			if (Matrix[i][j] == OldValue)
+			{
+				Matrix[i][j] = NewValue;
+			}
+		}
+	}
+}
+
+bool FindNumber(int Matrix[6][6], int FindValue) {
+	int count = 0;
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
+			if (Matrix[i][j] == FindValue) {
+				count++;
+			}
+		}
+	}
+	return count > 1;
+}
+
+void CreateOutMatrix(int inpMatrix[6][6], int outMatrix[6][6])
+{
+	for (int i = 0; i < 6; i++)
+	{
+		for (int j = 0; j < 6; j++)
+		{
+			if (FindNumber(inpMatrix, inpMatrix[i][j]))
+			{
+				Swap(outMatrix, outMatrix[i][j], 1);
+			}
+			else
+			{
+				Swap(outMatrix, outMatrix[i][j], 0);
+			}
+		}
+	}
+}
+
+void CalcCount(int outMatrix[6][6])
+{
+	int countZero = 0, countOne = 0, i , j;
+	for (i = 0; i < 6; i++)
+	{
+		for (j = 0; j < 6; j++)
+		{
+			if (outMatrix[i][j] == 0)
+			{
+				countZero++;
+			}
+			else
+			{
+				countOne++;
+			}
+		}
+		printf("В строке %d содержится %d нулей и %d единиц;\n", i + 1, countZero, countOne);
+		countOne = countZero = 0;
+	}
+	for (j = 0; j < 6; j++)
+	{
+		for (i = 0; i < 6; i++)
+		{
+			if (outMatrix[i][j] == 0)
+			{
+				countZero++;
+			}
+			else
+			{
+				countOne++;
+			}
+		}
+		printf("В столбце %d содержится %d нулей и %d единиц;\n", j + 1, countZero, countOne);
+		countOne = countZero = 0;
+	}
+	printf("\n\n");
+}
+
+// EX 2
+
+int SearchMin (int Matrix[6][6], int i)
+{
+	int j = 0, min = Matrix[i][j];
+	for (j = 1; j < 6; j++)
+	{
+		if (Matrix[i][j] < min)
+		{
+			min = Matrix[i][j];
+		}
+	}
+	printf("Строка %d содержит min : %d\n", i + 1, min);
+	return min;
+}
+
+int SearchMax (int Matrix[6][6], int i)
+{
+	int j = 0, max = Matrix[i][j];
+	for (j = 1; j < 6; j++)
+	{
+		if (Matrix[i][j] > max)
+		{
+			max = Matrix[i][j];
+		}
+	}
+	printf("Строка %d содержит max : %d\n", i + 1, max);
+	return max;
+}
+
+int CalcSum (int Matrix[6][6])
+{
+	int summa = 0;
+	for (int i = 0; i < 6; i++)
+	{
+		if (((i + 1) % 2) == 1)
+		{
+			summa += SearchMin(Matrix, i);
+		}
+		else
+		{
+			summa += SearchMax(Matrix, i);
+		}
+	}
+	return summa;
+}
+
+void main()
+{
+	setlocale(0, "");
+
+	// EX 1
+
+	int inputMatrix[6][6], outputMatrix[6][6];
+	printf("______________________1_ex______________________\n\n");
+	printf("Матрица 6x6 : \n");
+	RandNumber(inputMatrix, outputMatrix);
+	PrintArray(inputMatrix);
+	printf("________________________________________________\n\n");
+	CreateOutMatrix(inputMatrix, outputMatrix);
+	PrintArray(outputMatrix);
+	CalcCount(outputMatrix);
+
+	// EX 2
+
+	int matrixNumber[6][6], sum;
+	printf("_____________________2_ex_______________________\n\n");
+	printf("Матрица 6x6 : \n");
+	RandNumber(matrixNumber, matrixNumber);
+	PrintArray(matrixNumber);
+	sum = CalcSum(matrixNumber);
+	printf("Сумма минимальных элементов нечётных строк и максимальных элементов чётных строк равна : %d\n", sum);
+	system("pause");
+}

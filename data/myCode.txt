@@ -1,0 +1,109 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <iostream>
+
+void RandNumber(int inpMatrix[7][7])
+{
+	srand(time(NULL));
+	for (int i = 0; i < 7; i++)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			inpMatrix[i][j] = rand()%100 + 2;  
+		}
+	}
+}
+
+void PrintArray(int Matrix[7][7]) 
+{
+	for (int i = 0; i < 7; i++) 
+	{
+		for (int j = 0; j < 7; j++) 
+		{
+			printf("%d\t", Matrix[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
+void bubbleSort(int Matrix[7][7], int length, int number)
+{
+	for (int i = 0; i < length - 1; i++)
+	{
+		for (int j = 0; j < length - i - 1; j++)
+		{
+			if (Matrix[number][j] > Matrix[number][j + 1])
+			{
+				int b = Matrix[number][j];
+				Matrix[number][j] = Matrix[number][j + 1];
+				Matrix[number][j + 1] = b;
+			}
+		}
+	}
+}
+
+void writeMatrix(int i, int Matrix[7][7])
+{
+	int additionalArray[7];
+	for (int j = 0; j < 7; j++)
+	{
+		additionalArray[j] = Matrix[i][j];
+		Matrix[i][j] = Matrix[i + 1][j];
+		Matrix[i + 1][j] = additionalArray[j];
+	}
+}
+
+void MovementRows(int Matrix[7][7], int arraySum[7])
+{
+	int additionalMatrix[7][7];
+	for (int i = 0; i < 6; i++)
+	{
+		for (int j = 0; j < 6 - i; j++)
+		{
+			if (arraySum[j] > arraySum[j + 1])
+			{
+				int b = arraySum[j];
+				arraySum[j] = arraySum[j + 1];
+				arraySum[j + 1] = b;
+				writeMatrix(j, Matrix);
+			}
+		}
+	}
+}
+
+void SortMatrix(int Matrix[7][7], int arraySum[7])
+{
+	for (int i = 0; i < 7; i++)
+	{
+		bubbleSort(Matrix, 7, i);
+		for (int j = 0; j < 7; j++)
+		{
+			arraySum[i] += Matrix[i][j];
+		}
+	}
+	
+	MovementRows(Matrix, arraySum);
+}
+
+void printSequence(int arraySum[7])
+{
+	for (int j = 0; j < 7; j++)
+	{
+		printf("Сумма %d строки равна %d\n", j + 1, arraySum[j]);
+	}
+}
+
+void main()
+{
+	setlocale(0, "");
+	int Matrix[7][7], arraySum[7] = {0};
+	RandNumber(Matrix);
+	PrintArray(Matrix);
+	SortMatrix(Matrix, arraySum);
+	printf("________________________________________________\n\n");
+	PrintArray(Matrix);
+	printSequence(arraySum);
+	system("pause");
+}
