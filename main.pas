@@ -355,7 +355,7 @@ begin
   for  i := 0 to length(arrayFunction) - 1 do
     Finding(arrayFunction[i]);
   CalculationValues;
- // MemoInputText.Text := arrayFunction[length(arrayFunction) - 1];
+  //MemoInputText.Text := arrayFunction[length(arrayFunction) - 1];
 end;
 
 procedure TFormMetrick.FormCreate(Sender: TObject);
