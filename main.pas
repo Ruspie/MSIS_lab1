@@ -191,7 +191,7 @@ procedure TFormMetrick.CorrectExpression(var expression: String);
 begin
   if (expression[Length(expression)] = '(') then  // при поиске функции возвращается конструкция типа func(
     Delete(expression, length(expression), 1);
-  if (expression = 'do') then            
+  if (expression = 'do') then                     // исправление найденного оператора do на do while
     expression := expression + ' while';
 end;
 
