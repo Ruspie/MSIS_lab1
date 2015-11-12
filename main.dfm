@@ -158,8 +158,9 @@ object FormMetrick: TFormMetrick
   object OpenDialog: TOpenDialog
     DefaultExt = 'GetCurrentDir'
     Filter = 
-      'Text file|*.txt|Word file|*.doc|Word file (2013)|*.docx|C cod|*.' +
-      'c'
+      'C cod|*.c|Word file|*.doc|Word file (2013)|*.docx|Text file|*.tx' +
+      't'
+    FilterIndex = 0
     Left = 784
     Top = 232
   end
