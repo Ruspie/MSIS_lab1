@@ -15,6 +15,23 @@
 #define DELAY_MAX 1000
 #define DELAY_STEP 10
 
+/*void board_draw(void);
+void game_draw(void);
+void game_exit(void);
+void game_init(int, char*[]);
+void game_loop(void);
+void game_step(void);
+void game_update(void);
+void matrix_change(void);
+int  matrix_count_neighbors(int, int);
+void matrix_init(void);
+void matrix_read(const char *, int, int);
+void matrix_update(void);
+bool matrix_valid_position(int, int);
+void panel_draw(void);
+void usage(const char*);
+*/
+
 void board_draw(void);
 void game_draw(void);
 void game_exit(void);
@@ -55,6 +72,8 @@ struct timeval before;
 struct timeval now;
 WINDOW *main_window;
 WINDOW *panel_window;
+
+//WINDOW *panel_window;
 
 int main(int argc, char *argv[]) {
     game_init(argc, argv);
@@ -120,6 +139,12 @@ void game_exit(void) {
     endwin();
 }
 
+/*void game_loop(void) {
+    game_update();
+    game_draw();
+    if (stat == STAT_PLAYING) game_step();
+}*/
+
 void game_loop(void) {
     game_update();
     game_draw();
@@ -148,6 +173,8 @@ void game_update(void) {
 void game_draw(void) {
     board_draw();
 }
+
+//void game_step(void) {
 
 void game_step(void) {
     int x = getcurx(main_window);
