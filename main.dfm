@@ -155,27 +155,12 @@ object FormMetrick: TFormMetrick
     WordWrap = True
     OnClick = ButtonSaveInputTextClick
   end
-  object OpenDialog: TOpenDialog
-    DefaultExt = 'GetCurrentDir'
-    Filter = 
-      'C cod|*.c|Word file|*.doc|Word file (2013)|*.docx|Text file|*.tx' +
-      't'
-    FilterIndex = 0
-    Left = 784
-    Top = 232
-  end
-  object SaveDialog: TSaveDialog
-    DefaultExt = 'GetCurrentDir'
-    Filter = 'Text file|*.txt|Word file|*.doc|Word file (2013)|*.docx'
-    Left = 816
-    Top = 232
-  end
   object XPManifest: TXPManifest
     Left = 848
     Top = 232
   end
-  object VistaAltFix1: TVistaAltFix
-    Left = 784
-    Top = 264
+  object VistaAltFix: TVistaAltFix
+    Left = 816
+    Top = 232
   end
 end

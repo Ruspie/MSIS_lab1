@@ -9,8 +9,6 @@ uses
 type
   TArrayOfFuction = array of String;
   TFormMetrick = class(TForm)
-    OpenDialog: TOpenDialog;
-    SaveDialog: TSaveDialog;
     XPManifest: TXPManifest;
     ButtonOpenFile: TButton;
     GroupBoxInputText: TGroupBox;
@@ -25,7 +23,7 @@ type
     LabelOperators: TLabel;
     LabelOperands: TLabel;
     StringGridOperands: TStringGrid;
-    VistaAltFix1: TVistaAltFix;
+    VistaAltFix: TVistaAltFix;
     procedure ButtonOpenFileClick(Sender: TObject);
     procedure ButtonClearInputTextClick(Sender: TObject);
     procedure ButtonClearAllClick(Sender: TObject);
@@ -38,7 +36,7 @@ type
     procedure ClearStringGrid();
     procedure DeleteExpressions(var inputText: string; searchExpression: string);
     procedure FormattingText(var inputText: string);
-    procedure FindingExpressions(searchExpression, inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
+    procedure FindingExpressions(searchExpression: String; var inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
     procedure Finding(var inputText: string);
     procedure CalculationValues();
     procedure CorrectExpression(var expression: String);
@@ -61,7 +59,14 @@ begin
 end;
 
 procedure TFormMetrick.ButtonOpenFileClick(Sender: TObject);
+var
+  OpenDialog: TOpenDialog;
 begin
+  OpenDialog := TOpenDialog.Create(Self);
+  OpenDialog.DefaultExt := GetCurrentDir;
+  OpenDialog.Filter := 'C code|*.c|Text file|*.txt|Word file|*.doc|Word file (2013)|*.docx';
+  OpenDialog.FilterIndex := 1;
+  OpenDialog.Options := [ofFileMustExist];
   if OpenDialog.Execute then
   begin
     MemoInputText.Clear;
@@ -69,6 +74,7 @@ begin
   end
   else
     MessageBox(0, 'Открытие файла прервано!', 'Открытие файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
+  OpenDialog.Free();
 end;
 
 procedure TFormMetrick.MemoInputTextChange(Sender: TObject);
@@ -77,7 +83,13 @@ begin
 end;
 
 procedure TFormMetrick.ButtonSaveInputTextClick(Sender: TObject);
+var
+  SaveDialog: TSaveDialog;
 begin
+  SaveDialog := TSaveDialog.Create(Self);
+  SaveDialog.DefaultExt := GetCurrentDir;
+  SaveDialog.Filter := 'C code|*.c|Text file|*.txt|Word file|*.doc|Word file (2013)|*.docx';
+  SaveDialog.FilterIndex := 1;
   if SaveDialog.Execute then
   begin
     MemoInputText.Lines.SaveToFile(SaveDialog.FileName);
@@ -85,6 +97,7 @@ begin
   end
   else
     MessageBox(0, 'Сохранение файла прервано!', 'Сохранение файла', MB_OK + MB_TOPMOST + MB_ICONERROR);
+  SaveDialog.Free();
 end;
 
 procedure TFormMetrick.ButtonClearInputTextClick(Sender: TObject);
@@ -262,7 +275,7 @@ begin
     end;
 end;
 
-procedure TFormMetrick.FindingExpressions(searchExpression, inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
+procedure TFormMetrick.FindingExpressions(searchExpression: String; var inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
 var
   RegExp: TPerlRegEx;
   amount: Integer;
@@ -282,41 +295,27 @@ begin
       AddInStringGrid(amount, expression, StringGrid);
     until not RegExp.MatchAgain;
   RegExp.Free;
+  DeleteExpressions(inputText, searchExpression);
 end;
 
 procedure TFormMetrick.Finding(var inputText: string);
 begin
   FindingExpressions('(("[^\r\n]{0,}")|(''[^\r\n]{0,}''))', inputText, StringGridOperands, true); // строковые константы
-  DeleteExpressions(inputText, '(("[^\r\n]{0,}")|(''[^\r\n]{0,}''))');
   FindingExpressions('(\b[\w\s]{0,}\?[\w\s]{0,}\:[\w\s]{0,}\b)', inputText, stringGridOperators, false); // тернарный оператор
-  DeleteExpressions(inputText, '(\b[\w\s]{0,}\?[\w\s]{0,}\:[\w\s]{0,}\b)');
   FindingExpressions('(\+=|-=|\*=|\/=|%=|&=|\|=|\^=|<<=|>>=)', inputText, stringGridOperators, false); // операторы составного присваивания
-  DeleteExpressions(inputText, '(\+=|-=|\*=|\/=|%=|&=|\|=|\^=|<<=|>>=)');
   FindingExpressions('(\*|->\*?|\.\*?)', inputText, StringGridOperators, false); //операторы работы с указателями и челнами класса
-  DeleteExpressions(inputText, '(\*|->\*?|\.\*?)');
   FindingExpressions('((\~|&|\||\^|<<|>>))', inputText, stringGridOperators, false); // операторы побитовые
-  DeleteExpressions(inputText, '(\~|\^|<<|>>)');
   FindingExpressions('((={2}|!=|>=?|<=?))', inputText, StringGridOperators, false); //операторы сравнения
-  DeleteExpressions(inputText, '((={2}|!=|>=?|<=?))');
   FindingExpressions('(&&|\|\|)', inputText, StringGridOperators, false); //операторы логические
-  DeleteExpressions(inputText, '(&&|\|\|)');
   FindingExpressions('(=|\+{1,2}|-{2}|-|\*|\/|%|!{2})', inputText, StringGridOperators, false);  // арифметические операторы
-  DeleteExpressions(inputText, '(=|\+{1,2}|-{2}|-|\*|\/|%|!{2})');
   FindingExpressions('(!|&|\||\,|\;)', inputText, StringGridOperators, false);  // остальные операторы
-  DeleteExpressions(inputText, '(!|&|\||\,|\;)');
   FindingExpressions('(\d+)', inputText, StringGridOperands, true); // цыфровые константы
-  DeleteExpressions(inputText, '(\d+)');
   FindingExpressions('(\b(for|do|while))', inputText, stringGridOperators, false); // поиск циклов
-  DeleteExpressions(inputText, '(\b(for|do|while))');
   FindingExpressions('(\b[\w\_]*\s*?\()', inputText, stringGridOperators, false); // поиск функций
-  DeleteExpressions(inputText, '(\b[\w\_]*\s*?\()');
   FindingExpressions('(\b(const )?(signed |unsigned )?(short |long )?(char|int|float|double|bool|void))', inputText, stringGridOperators, false); // зарезервированные слова
-  DeleteExpressions(inputText, '(\b(const )?(signed |unsigned )?(short |long )?(char|int|float|double|bool|void))');
-  FindingExpressions('((struct\s{0,}[\w\_]{1,})|typedef|return)', inputText, stringGridOperators, false); // зарезервированные слова
-  DeleteExpressions(inputText, '((struct\s{0,}[\w\_]{1,})|typedef|else|break|case)');
+  FindingExpressions('((struct\s{0,}[\w\_]{1,})|typedef|return|else|case|break|continue)', inputText, stringGridOperators, false); // зарезервированные слова
   DeleteExpressions(inputText, '(#define)'); //удаление директивы
   FindingExpressions('(\b[\w\_]{1,}\b)', inputText, stringGridOperands, true); // поиск операндов
-  DeleteExpressions(inputText, '(\b[\w\_]{1,}\b)');
   StringGridOperators.RowCount := StringGridOperators.RowCount - 1;
   StringGridOperands.RowCount := StringGridOperands.RowCount - 1;
 end;
@@ -346,7 +345,7 @@ begin
       Cells[2,5] := IntToStr(dictionaryOperators + dictionaryOperands);
       Cells[2,6] := IntToStr(amountOperators + amountOperands);
       Cells[2,7] := FloatToStrF(StrToFloat(Cells[2,6]) * Log2(StrToFloat(Cells[2,5])), ffGeneral, 6, 2);
-      Cells[2,8] := FloatToStrF(StrToFloat(Cells[2,5]) * Log2(StrToFloat(Cells[2,5])), ffGeneral, 6, 2);
+      Cells[2,8] := FloatToStrF(dictionaryOperands * Log2(dictionaryOperands), ffGeneral, 6, 2); // StrToFloat(Cells[2,5]
       Cells[2,9] := FloatToStrF(dictionaryOperators * Log2(dictionaryOperators) + dictionaryOperands * Log2(dictionaryOperands), ffGeneral, 6, 2);
       Cells[2,10] := FloatToStrF(StrToFloat(Cells[2,8]) / StrToFloat(Cells[2,7]), ffGeneral, 6, 2);
       Cells[2,11] := FloatToStrF(2 * dictionaryOperands / (dictionaryOperators * amountOperands), ffGeneral, 6, 2);
