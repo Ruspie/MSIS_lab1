@@ -41,7 +41,7 @@ type
     procedure CalculationValues();
     procedure CorrectExpression(var expression: String);
     procedure PartitionOnFunctions(var inputText: String; var arrayFunction: TArrayOfFuction);
-    procedure AddInStringGrid(amountRow: integer; expression: String; StringGrid: TStringGrid);
+    procedure AddInStringGrid(RowCountInStart: integer; expression: String; StringGrid: TStringGrid);
   public
     { Public declarations }
   end;
@@ -249,18 +249,18 @@ begin
   RegExp.Free;
 end;
 
-procedure TFormMetrick.AddInStringGrid(amountRow: integer; expression: String; StringGrid: TStringGrid);
+procedure TFormMetrick.AddInStringGrid(RowCountInStart: integer; expression: String; StringGrid: TStringGrid);
 var
   isFound: Boolean;
   i: Integer;
 begin
   isFound := false;
   i := 1;
-  while (amountRow + i < StringGrid.RowCount - 1) and (not isFound) do
+  while (RowCountInStart + i < StringGrid.RowCount - 1) and (not isFound) do
   begin
-    if (StringGrid.Cells[0, amountRow + i] = expression) then
+    if (StringGrid.Cells[0, RowCountInStart + i] = expression) then
     begin
-      StringGrid.Cells[1, amountRow + i] := IntToStr(StrToInt(StringGrid.Cells[1, amountRow + i]) + 1);
+      StringGrid.Cells[1, RowCountInStart + i] := IntToStr(StrToInt(StringGrid.Cells[1, RowCountInStart + i]) + 1);
       isFound := True;
     end
     else
@@ -278,21 +278,21 @@ end;
 procedure TFormMetrick.FindingExpressions(searchExpression: String; var inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
 var
   RegExp: TPerlRegEx;
-  amountRow: Integer;
+  RowCountInStart: Integer;
   expression: String;
 begin
   RegExp := TPerlRegEx.Create;
   RegExp.Subject := inputText;
   RegExp.RegEx := searchExpression;
   if otherFunction then
-    amountRow := StringGrid.RowCount - 2
+    RowCountInStart := StringGrid.RowCount - 2
   else
-    amountRow := 0;
+    RowCountInStart := 0;
   if (RegExp.Match) then
     repeat
       expression := RegExp.Groups[0];
       CorrectExpression(expression);
-      AddInStringGrid(amountRow, expression, StringGrid);
+      AddInStringGrid(RowCountInSTart, expression, StringGrid);
     until not RegExp.MatchAgain;
   RegExp.Free;
   DeleteExpressions(inputText, searchExpression);
