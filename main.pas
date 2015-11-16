@@ -211,7 +211,7 @@ end;
 procedure TFormMetrick.PartitionOnFunctions(var inputText: String; var arrayFunction: TArrayOfFuction);
 var
   RegExp: TPerlRegEx;
-  sizeArray, positionStart, i, amountSymbol: Integer;
+  sizeArray, positionStart, i, counterSymbol: Integer;
 const
   searchExpression: String = '(\b(signed |unsigned )?(short |long )?(char|int|float|double|bool|void)\s*[\w]*\s*?\([^\{\;]*?{)';
 begin
@@ -231,14 +231,14 @@ begin
         SetLength(arrayFunction, sizeArray);
         positionStart := RegExp.GroupOffsets[0];
         i := RegExp.MatchedLength - 1;
-        amountSymbol := 1;
-        while (amountSymbol <> 0) do
+        counterSymbol := 1;
+        while (counterSymbol <> 0) do
         begin
           inc(i);
           if (inputText[positionStart + i] = '{') then
-            inc(amountSymbol);
+            inc(counterSymbol);
           if (inputText[positionStart + i] = '}') then
-            dec(amountSymbol);
+            dec(counterSymbol);
         end;
         arrayFunction[sizeArray - 1] := Copy(inputText, positionStart, i + 1);
         Delete(inputText, positionStart, i + 1);
@@ -278,21 +278,21 @@ end;
 procedure TFormMetrick.FindingExpressions(searchExpression: String; var inputText: String; var StringGrid: TStringGrid; otherFunction: Boolean);
 var
   RegExp: TPerlRegEx;
-  amount: Integer;
+  amountRow: Integer;
   expression: String;
 begin
   RegExp := TPerlRegEx.Create;
   RegExp.Subject := inputText;
   RegExp.RegEx := searchExpression;
   if otherFunction then
-    amount := StringGrid.RowCount - 2
+    amountRow := StringGrid.RowCount - 2
   else
-    amount := 0;
+    amountRow := 0;
   if (RegExp.Match) then
     repeat
       expression := RegExp.Groups[0];
       CorrectExpression(expression);
-      AddInStringGrid(amount, expression, StringGrid);
+      AddInStringGrid(amountRow, expression, StringGrid);
     until not RegExp.MatchAgain;
   RegExp.Free;
   DeleteExpressions(inputText, searchExpression);
