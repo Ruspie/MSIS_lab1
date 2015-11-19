@@ -5,7 +5,8 @@ object FormMetrick: TFormMetrick
   BorderStyle = bsSingle
   Caption = 
     #1052#1057#1080#1057#1074#1048#1085#1092#1058' '#1051#1072#1073'. '#1056#1072#1073'. 1 - '#1041#1077#1075#1091#1085' '#1040#1083#1077#1082#1089#1072#1085#1076#1088' '#1075#1088'.451001               ' +
-    '                     Git: https://github.com/begun4ik/MSIS.git'
+    '                     Git: https://github.com/begun4ik/MSIS_lab1.' +
+    'git'
   ClientHeight = 776
   ClientWidth = 913
   Color = clBtnFace
